@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 ## Script for automatically creating collages, adapted for my own uses from the script at
 ## http://weare.buildingsky.net/2006/10/18/render-greatlooking-collages-with-ruby-and-rmagick
@@ -25,7 +25,7 @@ def create_slide(image)
   mask = Image.new(photo.columns, photo.rows, mask_fill)
 
   ## Construct the slide image, and resize for photo
-  slide = Image.new(photo.columns + 25, photo.rows + 25) { self.background_color = 'black' }
+  slide = Image.new(photo.columns + 40, photo.rows + 40) { self.background_color = 'white' }
   slide_background = Image.new(slide.columns, slide.rows) { self.background_color = 'transparent' }
   #photo.crop_resized!(138,138)
 
@@ -36,7 +36,7 @@ def create_slide(image)
   
   # composite photo and slide on transparent background
   slide_background.composite!(slide, 0, 0, OverCompositeOp)
-  slide_background.composite!(photo, 16, 16, OverCompositeOp)
+  slide_background.composite!(photo, 20, 20, OverCompositeOp)
   
   # rotate slide +/- 45 degrees
   rotation = backandforth(15)
