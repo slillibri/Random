@@ -17,6 +17,7 @@ end
 
 def create_slide(image)
   ## read and resize the slide photo
+  ## TODO photo should be scaled based on the original photo size
   photo = Image.read(image).first
   photo.resize!(0.20)
   
@@ -67,7 +68,7 @@ begin
     when '--source'
       basedir = arg
     when '--count'
-      count = arg
+      count = arg.to_i
     when '--basename'
       basename = arg
     end    
