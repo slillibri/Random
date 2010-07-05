@@ -25,6 +25,7 @@ def create_slide(image)
   mask = Image.new(photo.columns, photo.rows, mask_fill)
 
   ## Construct the slide image, and resize for photo
+  ## TODO construct a proper slide image
   slide = Image.new(photo.columns + 40, photo.rows + 40) { self.background_color = 'white' }
   slide_background = Image.new(slide.columns, slide.rows) { self.background_color = 'transparent' }
   #photo.crop_resized!(138,138)
