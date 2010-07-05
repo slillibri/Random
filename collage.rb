@@ -18,7 +18,7 @@ end
 def create_slide(image)
   ## read and resize the slide photo
   photo = Image.read(image).first
-  photo.resize!(0.25)
+  photo.resize!(0.20)
   
   # create a grey scale gradient fill for our mask
   mask_fill = GradientFill.new(0, 0, 0, photo.rows, '#FFFFFF', '#F0F0F0')
@@ -40,8 +40,7 @@ def create_slide(image)
   slide_background.composite!(photo, 20, 20, OverCompositeOp)
   
   # rotate slide +/- 45 degrees
-  rotation = backandforth(15)
-  slide_background.rotate!(rotation)
+  slide_background.rotate!(backandforth(15))
   
   # create workspace to apply shadow
   workspace = Image.new(slide_background.columns+5, slide_background.rows+5) { self.background_color = 'transparent' }
@@ -88,32 +87,29 @@ Find.find(basedir) {|file|
 
 puts "count #{count}"
 puts "Images #{baseimages.size}"
-1.upto(count.to_i) {|counter|
+(1..count).each do |counter|
   ## Randomly choose 4 images.
   images = Array.new
-  (1..4).each do
+  4.times do
     image_number = rand(baseimages.size)
     redo if images.include? baseimages[image_number]
     images.push baseimages[image_number]
   end
-  
+
   photo = Image.read("#{images.shift}").first
   template = Image.new(photo.columns + 20, photo.rows + 160)
   
   template.composite!(photo, 10, 10, OverCompositeOp)
   
   slides = Array.new
-  (images.size-1).downto(0) do |i|
-    slides.push create_slide("#{images[i]}")
-  end
-
-  current_position = 0
-  slides.each do |slide|
-    template.composite!(slide, current_position, (template.rows - slide.rows) + rand(20), OverCompositeOp)
+  current_position = 10
+  images.each do |image|
+    slide = create_slide(image)
+    template.composite!(slide, current_position, (template.rows - slide.rows) - rand(20), OverCompositeOp)
     current_position = current_position + slide.columns
   end
     
   puts "Writing #{basename}#{counter}.png"
   
   template.write("#{basename}#{counter}.png")
-}
+end
