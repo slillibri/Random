@@ -9,18 +9,27 @@ require 'getoptlong'
 require 'RMagick'
 include Magick
 
+class Dimensions
+  attr_accessor :width, :height
+  def initialize(width, height)
+    self.width = width
+    self.height = height
+  end
+end
+
 def backandforth(degree)
   polarity = rand(2) * -1
   return rand(degree) * polarity if polarity < 0
   return rand(degree)
 end
 
-def create_slide(image)
+def create_slide(image, dimensions)
   ## read and resize the slide photo
   ## TODO photo should be scaled based on the original photo size
-  photo = Image.read(image).first
-  photo.resize!(0.20)
-  
+  # photo = Image.read(image).first
+  # photo.resize!(0.20)
+  slide_rotate = backandforth(15)
+  photo = scale_slide(image, dimensions, slide_rotate)
   # create a grey scale gradient fill for our mask
   mask_fill = GradientFill.new(0, 0, 0, photo.rows, '#FFFFFF', '#F0F0F0')
   mask = Image.new(photo.columns, photo.rows, mask_fill)
@@ -41,7 +50,7 @@ def create_slide(image)
   slide_background.composite!(photo, 20, 20, OverCompositeOp)
   
   # rotate slide +/- 45 degrees
-  slide_background.rotate!(backandforth(15))
+  slide_background.rotate!(slide_rotate)
   
   # create workspace to apply shadow
   workspace = Image.new(slide_background.columns+5, slide_background.rows+5) { self.background_color = 'transparent' }
@@ -50,6 +59,29 @@ def create_slide(image)
   workspace.composite!(slide_background, NorthWestGravity, OverCompositeOp)
   
   return workspace
+end
+
+def scale_slide(image, dimensions, slide_rotate)
+  photo = Image.read(image).first
+  photo2 = photo.rotate(slide_rotate)
+  bounding_height = (dimensions.height * 0.30) - 40
+  bounding_width = (dimensions.width * 0.33) - 40
+  scale_width = photo2.columns * 0.33
+  scale_height = photo2.rows * 0.30
+  
+  puts "photo #{photo2.rows}x#{photo2.columns}"
+  puts "bounding #{bounding_height}x#{bounding_width}"
+  puts "scale #{scale_height}x#{scale_width}"
+  if photo2.columns > photo2.rows
+    puts "photo is wider, scaling to #{bounding_width}"
+    photo.resize_to_fill!(bounding_width)
+  else
+    scale_per = (bounding_height / photo2.rows)
+    puts "photo is taller, scaling to #{scale_per}%"
+    photo.scale!(scale_per)    
+  end
+  puts "#{photo.rows}x#{photo.columns}"
+  return photo
 end
 
 ### MAIN ###
@@ -98,6 +130,8 @@ puts "Images #{baseimages.size}"
   end
 
   photo = Image.read("#{images.shift}").first
+  dimensions = Dimensions.new(photo.columns, photo.rows)
+  puts "dimensions #{dimensions.height}x#{dimensions.width}"
   template = Image.new(photo.columns + 20, photo.rows + 160)
   
   template.composite!(photo, 10, 10, OverCompositeOp)
@@ -105,12 +139,23 @@ puts "Images #{baseimages.size}"
   slides = Array.new
   current_position = 10
   images.each do |image|
-    slide = create_slide(image)
+    slide = create_slide(image, dimensions)
     template.composite!(slide, current_position, (template.rows - slide.rows) - rand(20), OverCompositeOp)
     current_position = current_position + slide.columns
   end
     
   puts "Writing #{basename}#{counter}.png"
   
-  template.write("#{basename}#{counter}.png")
+  template.write("#{basename}#{counter}.png") {self.quality = 75}
+end
+
+__END__
+Bounding box for slide is original_height * 0.20 x original_width * 0.33
+Bounding_width = (original_width * 0.33) - 40  (to account for border)
+Bounding_height = (original_height * 0.20) - 40 
+If width is the long side
+  resize to bounding_width
+otherwise
+  calculate scale is (bounding_height / height) * 100
+  resize to scale
 end
