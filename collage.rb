@@ -30,20 +30,11 @@ def create_slide(image, dimensions)
   # photo.resize!(0.20)
   slide_rotate = backandforth(15)
   photo = scale_slide(image, dimensions, slide_rotate)
-  # create a grey scale gradient fill for our mask
-  # mask_fill = GradientFill.new(0, 0, 0, photo.rows, '#FFFFFF', '#F0F0F0')
-  # mask = Image.new(photo.columns, photo.rows, mask_fill)
 
   ## Construct the slide image, and resize for photo
   ## TODO construct a proper slide image
   slide = Image.new(photo.columns + 40, photo.rows + 40) { self.background_color = 'white' }
   slide_background = Image.new(slide.columns, slide.rows) { self.background_color = 'transparent' }
-  #photo.crop_resized!(138,138)
-
-  # apply alpha mask to slide
-  # photo.matte = true
-  # mask.matte = false
-  # photo.composite!(mask, 0, 0, CopyOpacityCompositeOp)
   
   # composite photo and slide on transparent background
   slide_background.composite!(slide, 0, 0, OverCompositeOp)
@@ -76,11 +67,12 @@ def scale_slide(image, dimensions, slide_rotate)
   puts "scale #{scale_height}x#{scale_width}"
   if photo2.columns > photo2.rows
     puts "image is wider, scaling to #{bounding_width}"
+    ## 
     photo.resize_to_fill!(bounding_width)
   else
     scale_per = (bounding_height / photo2.rows)
     puts "image is taller, scaling to #{scale_per}%"
-    photo.scale!(scale_per)    
+    photo.scale!(scale_per)
   end
   puts "#{photo.rows}x#{photo.columns}"
   return photo
