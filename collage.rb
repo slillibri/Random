@@ -26,13 +26,13 @@ end
 def create_slide(image, dimensions)
   ## read and resize the slide photo
   ## TODO photo should be scaled based on the original photo size
-  # photo = Image.read(image).first
+  photo = Image.read(image).first
   # photo.resize!(0.20)
   slide_rotate = backandforth(15)
   photo = scale_slide(image, dimensions, slide_rotate)
   # create a grey scale gradient fill for our mask
-  mask_fill = GradientFill.new(0, 0, 0, photo.rows, '#FFFFFF', '#F0F0F0')
-  mask = Image.new(photo.columns, photo.rows, mask_fill)
+  # mask_fill = GradientFill.new(0, 0, 0, photo.rows, '#FFFFFF', '#F0F0F0')
+  # mask = Image.new(photo.columns, photo.rows, mask_fill)
 
   ## Construct the slide image, and resize for photo
   ## TODO construct a proper slide image
@@ -41,9 +41,9 @@ def create_slide(image, dimensions)
   #photo.crop_resized!(138,138)
 
   # apply alpha mask to slide
-  photo.matte = true
-  mask.matte = false
-  photo.composite!(mask, 0, 0, CopyOpacityCompositeOp)
+  # photo.matte = true
+  # mask.matte = false
+  # photo.composite!(mask, 0, 0, CopyOpacityCompositeOp)
   
   # composite photo and slide on transparent background
   slide_background.composite!(slide, 0, 0, OverCompositeOp)
@@ -58,10 +58,12 @@ def create_slide(image, dimensions)
   workspace.composite!(shadow, 3, 3, OverCompositeOp)
   workspace.composite!(slide_background, NorthWestGravity, OverCompositeOp)
   
+  # workspace = scale_slide(workspace, dimensions)
   return workspace
 end
 
 def scale_slide(image, dimensions, slide_rotate)
+  puts slide_rotate
   photo = Image.read(image).first
   photo2 = photo.rotate(slide_rotate)
   bounding_height = (dimensions.height * 0.30) - 40
@@ -73,11 +75,11 @@ def scale_slide(image, dimensions, slide_rotate)
   puts "bounding #{bounding_height}x#{bounding_width}"
   puts "scale #{scale_height}x#{scale_width}"
   if photo2.columns > photo2.rows
-    puts "photo is wider, scaling to #{bounding_width}"
+    puts "image is wider, scaling to #{bounding_width}"
     photo.resize_to_fill!(bounding_width)
   else
     scale_per = (bounding_height / photo2.rows)
-    puts "photo is taller, scaling to #{scale_per}%"
+    puts "image is taller, scaling to #{scale_per}%"
     photo.scale!(scale_per)    
   end
   puts "#{photo.rows}x#{photo.columns}"
