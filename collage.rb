@@ -7,6 +7,7 @@ require 'find'
 require 'rubygems'
 require 'getoptlong'
 require 'RMagick'
+require 'uuid'
 include Magick
 
 class Dimensions
@@ -24,58 +25,27 @@ def backandforth(degree)
 end
 
 def create_slide(image, dimensions)
-  ## read and resize the slide photo
-  ## TODO photo should be scaled based on the original photo size
-  photo = Image.read(image).first
-  # photo.resize!(0.20)
   slide_rotate = backandforth(15)
-  photo = scale_slide(image, dimensions, slide_rotate)
-
-  ## Construct the slide image, and resize for photo
-  ## TODO construct a proper slide image
-  slide = Image.new(photo.columns + 40, photo.rows + 40) { self.background_color = 'white' }
-  slide_background = Image.new(slide.columns, slide.rows) { self.background_color = 'transparent' }
-  
-  # composite photo and slide on transparent background
-  slide_background.composite!(slide, 0, 0, OverCompositeOp)
-  slide_background.composite!(photo, 20, 20, OverCompositeOp)
-  
-  # rotate slide +/- 45 degrees
-  slide_background.rotate!(slide_rotate)
-  
-  # create workspace to apply shadow
-  workspace = Image.new(slide_background.columns+5, slide_background.rows+5) { self.background_color = 'transparent' }
-  shadow = slide_background.shadow(0, 0, 2.0, '30%')
-  workspace.composite!(shadow, 3, 3, OverCompositeOp)
-  workspace.composite!(slide_background, NorthWestGravity, OverCompositeOp)
-  
-  # workspace = scale_slide(workspace, dimensions)
-  return workspace
-end
-
-def scale_slide(image, dimensions, slide_rotate)
-  puts slide_rotate
   photo = Image.read(image).first
-  photo2 = photo.rotate(slide_rotate)
-  bounding_height = (dimensions.height * 0.30) - 40
-  bounding_width = (dimensions.width * 0.33) - 40
-  scale_width = photo2.columns * 0.33
-  scale_height = photo2.rows * 0.30
+  puts "photo: #{photo.rows}x#{photo.columns}"
+  background = Image.new(photo.columns, photo.rows) {self.background_color = 'transparent'}
+  background.composite!(photo, 0, 0, OverCompositeOp)
+  background.rotate!(slide_rotate)
+  puts "image: #{image}"
+  puts "original: #{background.rows}x#{background.columns}"
+  bounding_height = (dimensions.height * 0.30)
+  bounding_width = (dimensions.width * 0.33)
+  puts "bounding: #{bounding_height}x#{bounding_width}"
+  background.resize_to_fit!(bounding_width, bounding_height)
+  puts "rotate: #{background.rows}x#{background.columns}"  
+  # background.rotate!(-(slide_rotate))
+  workspace = Image.new(background.columns+5, background.rows+5) {self.background_color = 'transparent'}
+  shadow = background.shadow(0, 0, 2.0, '30%')
+  workspace.composite!(shadow, 3, 3, OverCompositeOp)
+  workspace.composite!(background, NorthWestGravity, OverCompositeOp)
   
-  puts "photo #{photo2.rows}x#{photo2.columns}"
-  puts "bounding #{bounding_height}x#{bounding_width}"
-  puts "scale #{scale_height}x#{scale_width}"
-  if photo2.columns > photo2.rows
-    puts "image is wider, scaling to #{bounding_width}"
-    ## 
-    photo.resize_to_fill!(bounding_width)
-  else
-    scale_per = (bounding_height / photo2.rows)
-    puts "image is taller, scaling to #{scale_per}%"
-    photo.scale!(scale_per)
-  end
-  puts "#{photo.rows}x#{photo.columns}"
-  return photo
+  puts "final: #{workspace.rows}x#{workspace.columns}"
+  return workspace
 end
 
 ### MAIN ###
@@ -131,11 +101,13 @@ puts "Images #{baseimages.size}"
   template.composite!(photo, 10, 10, OverCompositeOp)
   
   slides = Array.new
-  current_position = 10
+  current_position = 5
   images.each do |image|
     slide = create_slide(image, dimensions)
+    puts "slide: #{slide.rows}x#{slide.columns}"
     template.composite!(slide, current_position, (template.rows - slide.rows) - rand(20), OverCompositeOp)
     current_position = current_position + slide.columns
+    puts "#{current_position}"
   end
     
   puts "Writing #{basename}#{counter}.png"
