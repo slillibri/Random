@@ -97,7 +97,6 @@ Find.find(basedir) {|file|
   
   template.composite!(photo, 10, 10, OverCompositeOp)
   
-  slides = Array.new
   current_position = 5
   images.each do |image|
     slide = create_slide(image, dimensions)
@@ -108,15 +107,4 @@ Find.find(basedir) {|file|
   puts "Writing #{basename}#{counter}.png"
   
   template.write("#{basename}#{counter}.png") {self.quality = 75}
-end
-
-__END__
-Bounding box for slide is original_height * 0.20 x original_width * 0.33
-Bounding_width = (original_width * 0.33) - 40  (to account for border)
-Bounding_height = (original_height * 0.20) - 40 
-If width is the long side
-  resize to bounding_width
-otherwise
-  calculate scale is (bounding_height / height) * 100
-  resize to scale
 end
