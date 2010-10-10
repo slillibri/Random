@@ -1,3 +1,4 @@
 Random ruby scripts I have lying around
 
 collage.rb A ruby script to automatically create collages from a directory of images
+check_queues.rb A ruby script to monitor RabbitMQ queues in Nagios
